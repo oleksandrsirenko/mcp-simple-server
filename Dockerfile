@@ -25,13 +25,5 @@ EXPOSE 8000
 ENV HOST=0.0.0.0
 ENV PORT=8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://0.0.0.0:${PORT}/mcp/ -X POST \
-    -H "Content-Type: application/json" \
-    -H "MCP-Protocol-Version: 2025-06-18" \
-    -H "Accept: application/json, text/event-stream" \
-    -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"health-check","version":"1.0"}}}' || exit 1
-
 # Run the server directly with Python
 CMD ["python", "main.py"]
