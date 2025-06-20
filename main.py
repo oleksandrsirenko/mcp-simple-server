@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Minimal MCP Server with FastMCP - Final Solution Using streamable_http_app"""
+"""Minimal MCP Server with FastMCP - Simple Working Solution"""
 
 import os
 import uvicorn
