@@ -1,0 +1,21 @@
+[project]
+name = "mcp-simple-server"
+version = "0.1.0"
+description = "Simple MCP server with streamable HTTP transport"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.28.1",
+    "mcp>=1.9.4",
+]
+
+[project.scripts]
+mcp-simple-server = "main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# Add this section to fix the build issue
+[tool.hatch.build.targets.wheel]
+packages = ["."]

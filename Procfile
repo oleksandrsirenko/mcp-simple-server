@@ -1,0 +1,1 @@
+web: HOST=0.0.0.0 PORT=$PORT python main.py
