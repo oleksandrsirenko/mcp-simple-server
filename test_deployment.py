@@ -3,6 +3,7 @@
 Test deployed MCP server on Railway.
 
 Usage:
+    python test_deployment.py mcp-simple-server-dev.up.railway.app
     python test_deployment.py https://mcp-simple-server-production.up.railway.app
 """
 
@@ -33,15 +34,25 @@ def main():
         print(
             "Example: python test_deployment.py https://mcp-simple-server-production.up.railway.app"
         )
+        print("Example: python test_deployment.py mcp-simple-server-dev.up.railway.app")
         sys.exit(1)
 
     server_url = sys.argv[1].rstrip("/")  # Remove trailing slash
+
+    # Add https:// if not present
+    if not server_url.startswith(("http://", "https://")):
+        server_url = f"https://{server_url}"
+        print(f"🔗 Added https protocol: {server_url}")
 
     try:
         success = asyncio.run(test_deployed_server(server_url))
         if success:
             print("\n🎉 Deployment test successful!")
             print(f"✅ Your MCP server is live at: {server_url}/mcp/")
+            print("\n🔧 Next steps:")
+            print("1. Use this URL in Claude Desktop configuration")
+            print("2. Set up GitHub Actions for auto-deployment")
+            print("3. Test with Claude AI assistant")
         else:
             print("\n❌ Deployment test failed!")
 
