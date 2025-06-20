@@ -21,11 +21,11 @@ USER mcpuser
 # Expose port
 EXPOSE 8000
 
-# Set environment for production - these should be explicitly set
+# Set environment for production
 ENV HOST=0.0.0.0
 ENV PORT=8000
 
-# Health check with Railway's expected port
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://0.0.0.0:${PORT}/mcp/ -X POST \
     -H "Content-Type: application/json" \
@@ -33,9 +33,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     -H "Accept: application/json, text/event-stream" \
     -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"health-check","version":"1.0"}}}' || exit 1
 
-# Copy startup script and make it executable
-COPY start.sh .
-RUN chmod +x start.sh
-
-# Run the server using startup script
-CMD ["./start.sh"]
+# Run the server directly with Python
+CMD ["python", "main.py"]
