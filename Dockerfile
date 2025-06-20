@@ -33,5 +33,9 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     -H "Accept: application/json, text/event-stream" \
     -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"health-check","version":"1.0"}}}' || exit 1
 
-# Run the server with explicit environment variables
-CMD ["sh", "-c", "HOST=0.0.0.0 PORT=${PORT:-8000} python main.py"]
+# Copy startup script and make it executable
+COPY start.sh .
+RUN chmod +x start.sh
+
+# Run the server using startup script
+CMD ["./start.sh"]

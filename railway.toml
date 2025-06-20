@@ -1,8 +1,9 @@
+# railway.toml
 [build]
 builder = "DOCKERFILE"
 
 [deploy]
-startCommand = "python main.py"
+startCommand = "./start.sh"
 healthcheckPath = "/mcp/"
 healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"

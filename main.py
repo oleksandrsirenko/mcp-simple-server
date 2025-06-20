@@ -4,10 +4,6 @@
 import os
 from mcp.server.fastmcp import FastMCP
 
-# Force set environment variables before creating FastMCP instance
-os.environ["HOST"] = os.getenv("HOST", "0.0.0.0")
-os.environ["PORT"] = os.getenv("PORT", "8000")
-
 mcp = FastMCP("Simple Server")
 
 
@@ -26,7 +22,7 @@ def multiply(a: float, b: float) -> float:
 def main():
     """Run the server"""
     host = os.getenv("HOST", "0.0.0.0")
-    port = os.getenv("PORT", "8000")
+    port = int(os.getenv("PORT", "8000"))
 
     print("Starting MCP server...")
     print(f"Host: {host}")
@@ -34,7 +30,26 @@ def main():
     print("MCP endpoint will be available at the server URL + /mcp")
     print(f"Health check endpoint: http://{host}:{port}/mcp/")
 
-    # Run the server
+    # For Railway/production deployment, we need to ensure 0.0.0.0 binding
+    if host == "0.0.0.0":
+        print("🚀 Production mode: Ensuring proper host binding")
+
+        # Set environment variables that uvicorn will definitely read
+        os.environ["UVICORN_HOST"] = host
+        os.environ["UVICORN_PORT"] = str(port)
+        os.environ["HOST"] = host
+        os.environ["PORT"] = str(port)
+
+        # Also try setting common server environment variables
+        os.environ["SERVER_HOST"] = host
+        os.environ["BIND_HOST"] = host
+        os.environ["LISTEN_HOST"] = host
+
+        print(f"✅ Set multiple environment variables to force {host}:{port} binding")
+
+    print("🏃 Starting FastMCP server...")
+
+    # Run the server - FastMCP should now pick up the environment variables
     mcp.run(transport="streamable-http")
 
 
