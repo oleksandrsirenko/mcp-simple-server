@@ -4,6 +4,9 @@
 import os
 import uvicorn
 from mcp.server.fastmcp import FastMCP
+from starlette.middleware import Middleware
+from starlette.applications import Starlette
+from starlette.routing import Mount
 
 mcp = FastMCP("Simple Server")
 
@@ -27,7 +30,13 @@ if __name__ == "__main__":
     print(f"Starting MCP server on {host}:{port}")
     print(f"MCP endpoint: /mcp")
 
-    app = mcp.streamable_http_app()
+    mcp_app = mcp.streamable_http_app()
+
+    # Wrap to disable trailing slash redirects that break behind reverse proxies
+    app = Starlette(
+        routes=[Mount("/", app=mcp_app)],
+        redirect_slashes=False,
+    )
 
     uvicorn.run(
         app,
