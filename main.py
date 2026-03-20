@@ -17,6 +17,7 @@ Ref: https://github.com/modelcontextprotocol/python-sdk/issues/1168
 import os
 import uvicorn
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 
@@ -28,10 +29,9 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 class TrailingSlashMiddleware:
     """Normalize MCP endpoint path to avoid Starlette's 307 redirect.
 
-    With stateless_http=True the route is registered at ``/mcp`` (no slash).
-    With stateful mode the route is at ``/mcp/`` (with slash).
-    This middleware accepts both variants so the server works regardless
-    of how the client or reverse proxy formats the URL.
+    The MCP SDK mounts the route at ``/mcp/`` (with trailing slash).
+    Many reverse proxies and clients send requests to ``/mcp`` (without).
+    This middleware rewrites the path so Starlette never issues a redirect.
 
     See https://github.com/modelcontextprotocol/python-sdk/issues/1168
     """
@@ -39,14 +39,11 @@ class TrailingSlashMiddleware:
     def __init__(self, app: ASGIApp, mcp_path: str = "/mcp") -> None:
         self.app = app
         self.mcp_path = mcp_path
+        self.mcp_path_slash = mcp_path + "/"
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] == "http":
-            path = scope["path"]
-            # Accept both /mcp and /mcp/ — try the canonical form first,
-            # and if that would 307 just rewrite to the other variant.
-            if path in (self.mcp_path, self.mcp_path + "/"):
-                scope["path"] = self.mcp_path
+        if scope["type"] == "http" and scope["path"] == self.mcp_path:
+            scope["path"] = self.mcp_path_slash
         await self.app(scope, receive, send)
 
 
@@ -54,10 +51,18 @@ class TrailingSlashMiddleware:
 # MCP Server
 # ---------------------------------------------------------------------------
 
+# For remote deployment: disable DNS rebinding protection since the server
+# runs behind a reverse proxy with its own domain.
+# See https://github.com/modelcontextprotocol/python-sdk/issues/1798
+security = TransportSecuritySettings(
+    enable_dns_rebinding_protection=False,
+)
+
 mcp = FastMCP(
     "Simple Server",
     stateless_http=True,  # No server-side session state → horizontally scalable
     json_response=True,  # Plain JSON responses instead of SSE streams
+    transport_security=security,
 )
 
 
