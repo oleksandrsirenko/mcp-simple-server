@@ -26,21 +26,27 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 
 class TrailingSlashMiddleware:
-    """Rewrite ``/mcp`` → ``/mcp/`` at the ASGI level so Starlette's router
-    never emits a 307 redirect.  This is required because many reverse
-    proxies (Railway, AWS ALB, GCP Cloud Run …) terminate TLS and the
-    redirect's ``Location`` header can end up using ``http://`` or trigger
-    a redirect loop.
+    """Normalize MCP endpoint path to avoid Starlette's 307 redirect.
+
+    With stateless_http=True the route is registered at ``/mcp`` (no slash).
+    With stateful mode the route is at ``/mcp/`` (with slash).
+    This middleware accepts both variants so the server works regardless
+    of how the client or reverse proxy formats the URL.
 
     See https://github.com/modelcontextprotocol/python-sdk/issues/1168
     """
 
-    def __init__(self, app: ASGIApp) -> None:
+    def __init__(self, app: ASGIApp, mcp_path: str = "/mcp") -> None:
         self.app = app
+        self.mcp_path = mcp_path
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] == "http" and scope["path"] == "/mcp":
-            scope["path"] = "/mcp/"
+        if scope["type"] == "http":
+            path = scope["path"]
+            # Accept both /mcp and /mcp/ — try the canonical form first,
+            # and if that would 307 just rewrite to the other variant.
+            if path in (self.mcp_path, self.mcp_path + "/"):
+                scope["path"] = self.mcp_path
         await self.app(scope, receive, send)
 
 

@@ -23,7 +23,7 @@ import httpx
 class MCPServerTest:
     def __init__(self, server_url: str = "http://localhost:8000"):
         self.server_url = server_url
-        self.mcp_endpoint = f"{server_url}/mcp/"
+        self.mcp_endpoint = f"{server_url}/mcp"
         self.session_id: Optional[str] = None
         self.client = httpx.AsyncClient(timeout=30.0)
 
